@@ -256,7 +256,6 @@ void
 page_init(void)
 {
 	size_t i;
-	static char *nextfree;
 	// The example code here marks all physical pages as free.
 	// However this is not truly the case.  What memory is free?
 	//  1) Mark physical page 0 as in use.
@@ -314,8 +313,19 @@ page_init(void)
 struct PageInfo *
 page_alloc(int alloc_flags)
 {
+	struct PageInfo * allocated = page_free_list;
+	if(allocated == NULL)
+	{
+		return NULL;
+	}
+	page_free_list = allocated->pp_link;
+	allocated->pp_link = NULL;
+	if(alloc_flags && ALLOC_ZERO)
+	{
+		memset(page2kva(allocated), 0, PGSIZE);
+	}
 	// Fill this function in
-	return 0;
+	return allocated;
 }
 
 //
@@ -325,6 +335,15 @@ page_alloc(int alloc_flags)
 void
 page_free(struct PageInfo *pp)
 {
+	if(pp != NULL)
+	{
+		if(pp->pp_ref != 0 || pp->pp_link != NULL)
+		{
+			panic("this page cannot be freed.\n");
+		}
+		pp->pp_link = page_free_list;
+		page_free_list = pp;
+	}
 	// Fill this function in
 	// Hint: You may want to panic if pp->pp_ref is nonzero or
 	// pp->pp_link is not NULL.
