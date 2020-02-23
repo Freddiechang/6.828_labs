@@ -102,7 +102,22 @@ boot_alloc(uint32_t n)
 	// to a multiple of PGSIZE.
 	//
 	// LAB 2: Your code here.
-
+	if(n == 0)
+	{
+		return nextfree;
+	}
+	else
+	{
+		int space_aligned = ROUNDUP(n, PGSIZE);
+		if(space_aligned > npages * PGSIZE)
+		{
+			panic("boot_alloc: out of memory.\n");
+		}
+		result = nextfree;
+		nextfree += space_aligned;
+		return result;
+	}
+	
 	return NULL;
 }
 
@@ -125,12 +140,14 @@ mem_init(void)
 	i386_detect_memory();
 
 	// Remove this line when you're ready to test this function.
-	panic("mem_init: This function is not finished\n");
+	//panic("mem_init: This function is not finished\n");
 
 	//////////////////////////////////////////////////////////////////////
 	// create initial page directory.
 	kern_pgdir = (pde_t *) boot_alloc(PGSIZE);
+	
 	memset(kern_pgdir, 0, PGSIZE);
+	
 
 	//////////////////////////////////////////////////////////////////////
 	// Recursively insert PD in itself as a page table, to form
@@ -148,7 +165,9 @@ mem_init(void)
 	// array.  'npages' is the number of physical pages in memory.  Use memset
 	// to initialize all fields of each struct PageInfo to 0.
 	// Your code goes here:
-
+	pages = (struct PageInfo *) boot_alloc(sizeof(struct PageInfo) * npages);
+	memset(pages, 0, sizeof(struct PageInfo) * npages);
+	
 
 	//////////////////////////////////////////////////////////////////////
 	// Now that we've allocated the initial kernel data structures, we set
@@ -157,8 +176,10 @@ mem_init(void)
 	// particular, we can now map memory using boot_map_region
 	// or page_insert
 	page_init();
-
+	
 	check_page_free_list(1);
+	
+	
 	check_page_alloc();
 	check_page();
 
@@ -234,29 +255,48 @@ mem_init(void)
 void
 page_init(void)
 {
+	size_t i;
+	static char *nextfree;
 	// The example code here marks all physical pages as free.
 	// However this is not truly the case.  What memory is free?
 	//  1) Mark physical page 0 as in use.
 	//     This way we preserve the real-mode IDT and BIOS structures
 	//     in case we ever need them.  (Currently we don't, but...)
+	pages[0].pp_ref = 1;
 	//  2) The rest of base memory, [PGSIZE, npages_basemem * PGSIZE)
 	//     is free.
-	//  3) Then comes the IO hole [IOPHYSMEM, EXTPHYSMEM), which must
-	//     never be allocated.
-	//  4) Then extended memory [EXTPHYSMEM, ...).
-	//     Some of it is in use, some is free. Where is the kernel
-	//     in physical memory?  Which pages are already in use for
-	//     page tables and other data structures?
-	//
-	// Change the code to reflect this.
-	// NB: DO NOT actually touch the physical memory corresponding to
-	// free pages!
-	size_t i;
-	for (i = 0; i < npages; i++) {
+	for(i = 1; i < npages_basemem; i++)
+	{
 		pages[i].pp_ref = 0;
 		pages[i].pp_link = page_free_list;
 		page_free_list = &pages[i];
 	}
+	//  3) Then comes the IO hole [IOPHYSMEM, EXTPHYSMEM), which must
+	//     never be allocated.
+	for(i = IOPHYSMEM >> PGSHIFT; i < EXTPHYSMEM >> PGSHIFT; i++)
+	{
+		pages[i].pp_ref = 1;
+	}
+	//  4) Then extended memory [EXTPHYSMEM, ...).
+	//     Some of it is in use, some is free. Where is the kernel
+	//     in physical memory?  Which pages are already in use for
+	//     page tables and other data structures?
+	size_t endofpages = (EXTPHYSMEM >> PGSHIFT) + (((uint32_t) boot_alloc(0)) - KERNBASE) / PGSIZE;
+	for(i = EXTPHYSMEM >> PGSHIFT; i < endofpages; i++)
+	{
+		pages[i].pp_ref = 1;
+	}
+	//
+	// Change the code to reflect this.
+	// NB: DO NOT actually touch the physical memory corresponding to
+	// free pages!
+	
+	for (i = endofpages; i < npages; i++) {
+		pages[i].pp_ref = 0;
+		pages[i].pp_link = page_free_list;
+		page_free_list = &pages[i];
+	}
+	
 }
 
 //
@@ -448,7 +488,6 @@ check_page_free_list(bool only_low_memory)
 
 	if (!page_free_list)
 		panic("'page_free_list' is a null pointer!");
-
 	if (only_low_memory) {
 		// Move pages with lower addresses first in the free
 		// list, since entry_pgdir does not map all pages.
@@ -463,7 +502,6 @@ check_page_free_list(bool only_low_memory)
 		*tp[0] = pp2;
 		page_free_list = pp1;
 	}
-
 	// if there's a page that shouldn't be on the free list,
 	// try to make sure it eventually causes trouble.
 	for (pp = page_free_list; pp; pp = pp->pp_link)
