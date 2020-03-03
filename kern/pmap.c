@@ -454,15 +454,26 @@ boot_map_region_4m(pde_t *pgdir, uintptr_t va, size_t size, physaddr_t pa, int p
 	uint32_t entries_needed = size / PTSIZE;
 	uint32_t i;
 	uint32_t cr4;
-
-	cr4 = rcr4();
-	cr4 |= CR4_PSE;
-	lcr4(cr4);
-
-	for(i = 0; i < entries_needed; i++)
+	uint32_t edx;
+	//check if the cpu supports pse
+	cpuid(1, NULL, NULL, NULL, &edx);
+	if (edx & (1 << 3))
 	{
-		pgdir[PDX(va)] = (pa + i * PTSIZE) | (perm | PTE_P | PTE_PS);
+		cr4 = rcr4();
+	    cr4 |= CR4_PSE;
+	    lcr4(cr4);
+
+	    for(i = 0; i < entries_needed; i++)
+	    {
+		    pgdir[PDX(va)] = (pa + i * PTSIZE) | (perm | PTE_P | PTE_PS);
+	    }
 	}
+	else
+	{
+		panic("PSE is not supported on this CPU.\n");
+	}
+	
+	
 }
 //
 // Map the physical page 'pp' at virtual address 'va'.
