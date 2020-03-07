@@ -351,11 +351,14 @@ load_icode(struct Env *e, uint8_t *binary)
 	//
 	struct Elf * elf;
 	struct Proghdr *ph, *eph;
+	uint32_t cr3;
+
 	elf = (struct Elf *)binary;
 	if(elf->e_magic != ELF_MAGIC)
 	{
 		panic("load_icode: invalid elf file.\n");
 	}
+	cr3 = rcr3();
 	lcr3(PADDR(e->env_pgdir));
 	ph = (struct Proghdr *) ((uint8_t *) elf + elf->e_phoff);
 	eph = ph + elf->e_phnum;
@@ -394,7 +397,7 @@ load_icode(struct Env *e, uint8_t *binary)
 	// at virtual address USTACKTOP - PGSIZE.
 	region_alloc(e, (void *)USTACKTOP - PGSIZE, PGSIZE);
 	e->env_tf.tf_esp = (uintptr_t)USTACKTOP;
-
+	lcr3(cr3);
 	// LAB 3: Your code here.
 }
 
