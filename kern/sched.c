@@ -12,9 +12,8 @@ void
 sched_yield(void)
 {
 	struct Env *idle;
-	uint32_t i;
+	uint32_t i, j;
 	bool found = false;
-	uint32_t rest_envs;
 	// Implement simple round-robin scheduling.
 	//
 	// Search through 'envs' for an ENV_RUNNABLE environment in
@@ -41,45 +40,26 @@ sched_yield(void)
 	{
 		i = ENVX(thiscpu->cpu_env->env_id);
 	}
+	for(j = 0; j < NENV; j++)
+	{
+		idle = &envs[(i + j + 1) % NENV];
+		    if(idle->env_status == ENV_RUNNABLE)
+		    {
+			    found = true;
+			    break;
+		    }
+	}
 	
-	rest_envs = i;
-	if(++i != NENV)
-	{
-		for(; i < NENV; i++)
-	    {
-		    idle = &envs[i];
-		    if(idle->env_status == ENV_RUNNABLE)
-		    {
-			    found = true;
-			    break;
-		    }
-	    }
-	}
 
-	if(!found && rest_envs)
-	{
-		for(i = 0; i < rest_envs; i++)
-		{
-			idle = &envs[i];
-		    if(idle->env_status == ENV_RUNNABLE)
-		    {
-			    found = true;
-			    break;
-		    }
-		}
-	}
-
-	if(!found && (thiscpu->cpu_env->env_status == ENV_RUNNING))
+	if(!found && thiscpu->cpu_env && (thiscpu->cpu_env->env_status == ENV_RUNNING))
 	{
 		found = true;
 		idle = &envs[ENVX(thiscpu->cpu_env->env_id)];
 	}
-	
 	if(found)
 	{
 		env_run(idle);
 	}
-	
 	// sched_halt never returns
 	sched_halt();
 }

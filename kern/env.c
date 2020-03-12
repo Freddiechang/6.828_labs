@@ -427,6 +427,7 @@ env_create(uint8_t *binary, enum EnvType type)
 	env_alloc(&e, 0);
 	load_icode(e, binary);
 	e->env_type = type;
+	//e->env_status = ENV_RUNNABLE;
 	// LAB 3: Your code here.
 }
 
