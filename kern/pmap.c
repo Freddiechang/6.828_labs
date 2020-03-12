@@ -327,7 +327,7 @@ page_init(void)
 	for(i = 1; i < npages_basemem; i++)
 	{
 		//page used for mp start up
-		if(i == 7)
+		if(i == PGNUM(MPENTRY_PADDR))
 		{
 			continue;
 		}
