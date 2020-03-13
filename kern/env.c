@@ -126,14 +126,14 @@ env_init(void)
 		envs[i].env_status = ENV_FREE;
 		if(i == NENV - 1)
 		{
-			envs[i].env_link == NULL;
+			envs[i].env_link = NULL;
 		}
 		else
 		{
-			envs[i].env_link == &envs[i + 1];
+			envs[i].env_link = &envs[i + 1];
 		}
-		env_free_list = &envs[0];
 	}
+	env_free_list = &envs[0];
 
 
 	// Per-CPU part of the initialization
@@ -226,6 +226,7 @@ env_alloc(struct Env **newenv_store, envid_t parent_id)
 	int32_t generation;
 	int r;
 	struct Env *e;
+
 
 	if (!(e = env_free_list))
 		return -E_NO_FREE_ENV;
