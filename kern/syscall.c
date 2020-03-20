@@ -242,7 +242,7 @@ sys_page_map(envid_t srcenvid, void *srcva,
 	if((pp = page_lookup(se->env_pgdir, srcva, &pte)) == NULL ||
 	    (uint32_t)srcva >= UTOP || (uint32_t)dstva >=UTOP || ROUNDDOWN(srcva, PGSIZE) != srcva||
 		ROUNDDOWN(dstva, PGSIZE) != dstva || (perm & PTE_U) == 0 || (perm & PTE_P) == 0
-		|| (perm & ~PTE_SYSCALL) != 0 || ((perm & PTE_W) && (*pte & PTE_W) == 0) )
+		|| (perm & ~PTE_SYSCALL) != 0 || ((perm & PTE_W) && ((*pte & PTE_W) == 0)) )
 	{
 		return -E_INVAL;
 	}
