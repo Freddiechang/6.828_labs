@@ -405,7 +405,6 @@ page_fault_handler(struct Trapframe *tf)
 	}
 	else
 	{
-		user_mem_assert(curenv, (void *)(UXSTACKTOP - PGSIZE), PGSIZE, PTE_P|PTE_W);
 		uint32_t * stacktop = (uint32_t *)UXSTACKTOP;
 		if(tf->tf_esp >= UXSTACKTOP-PGSIZE && tf->tf_esp <= UXSTACKTOP - 1)
 		{
@@ -414,12 +413,11 @@ page_fault_handler(struct Trapframe *tf)
 			*stacktop = 0;
 		}
 		struct UTrapframe *utf = ((void *)stacktop - sizeof(struct UTrapframe));
-		if(utf < (struct UTrapframe *)(UXSTACKTOP-PGSIZE))
-		{
-			cprintf("Run out of space on UXSTACK.\n");
-			print_trapframe(tf);
-	        env_destroy(curenv);
-		}
+		// all three test: uxstack, utf, curenv->env_pgfault_upcall validation
+		// can be done here. when upcall handler is not valid the utf will pile up
+		// and finally overflow the uxstack, and then caught by this mem assert.
+		user_mem_assert(curenv, (void *)utf, sizeof(struct UTrapframe), PTE_P|PTE_W);
+
 
 		utf->utf_esp = tf->tf_esp;
 		utf->utf_eflags = tf->tf_eflags;
