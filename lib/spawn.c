@@ -302,6 +302,25 @@ static int
 copy_shared_pages(envid_t child)
 {
 	// LAB 5: Your code here.
+	struct Env * e;
+	uint32_t i;
+	int r;
+	for(i = 0; i < (UTOP - PGSIZE)>>PTXSHIFT; i++)
+	{
+		if((uvpd[i >> 10] & PTE_P) && (uvpt[i] & PTE_SHARE))
+		{
+			uint32_t perm = uvpt[i] & PTE_SYSCALL;
+			r = sys_page_map(thisenv->env_id, (void *)(i*PGSIZE), child, (void *)(i*PGSIZE), perm);
+		    if(r < 0)
+	        {
+				cprintf("uvpd: %x, uvpt: %x", uvpd[i >> 10], uvpt[i]);
+		        cprintf("spawn.c: copy_shared_pages: %e\n", r);
+		        return r;
+	        }
+		}
+		
+	}
+	
 	return 0;
 }
 

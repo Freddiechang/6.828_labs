@@ -120,12 +120,16 @@ duppage(envid_t envid, unsigned pn)
 {
 	int r;
 	// LAB 4: Your code here.
-	uint32_t perm = uvpt[pn] & 0xfff;
-	if(perm & PTE_W || perm & PTE_COW)
+	uint32_t perm = uvpt[pn] & PTE_SYSCALL;
+	if( !(perm & PTE_SHARE) && (perm & PTE_W || perm & PTE_COW) )
 	{
-		perm &= 0x7;
+		perm &= PTE_P | PTE_W | PTE_U;
 		perm &= ~PTE_W;
 		perm |= PTE_COW;
+	}
+	if(perm & PTE_SHARE)
+	{
+		perm &= ~PTE_COW;
 	}
 	r = sys_page_map(thisenv->env_id, (void *)(pn*PGSIZE), envid, (void *)(pn*PGSIZE), perm);
 	if(r < 0)
