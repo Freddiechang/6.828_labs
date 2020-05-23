@@ -4,6 +4,7 @@
 #include <kern/pci.h>
 #include <kern/pcireg.h>
 #include <kern/e1000.h>
+#include <kern/pmap.h>
 
 // Flag to do "lspci" at bootup
 static int pci_show_devs = 1;
@@ -31,9 +32,11 @@ struct pci_driver pci_attach_class[] = {
 // pci_attach_vendor matches the vendor ID and device ID of a PCI device. key1
 // and key2 should be the vendor ID and device ID respectively
 struct pci_driver pci_attach_vendor[] = {
-	{ 0x8086, 0x100e, (int (*) (struct pci_func *pcif))pci_func_enable },
+	{ 0x8086, E1000_DEV_ID_82540EM, (int (*) (struct pci_func *))pci_e1000_attach },
 	{ 0, 0, 0 },
 };
+
+volatile char *e1000;
 
 static void
 pci_conf1_set_addr(uint32_t bus,
@@ -255,4 +258,13 @@ pci_init(void)
 	memset(&root_bus, 0, sizeof(root_bus));
 
 	return pci_scan_bus(&root_bus);
+}
+
+// lab 6: custom attach function
+void
+pci_e1000_attach(struct pci_func *f)
+{
+	pci_func_enable(f);
+	e1000 = mmio_map_region(f->reg_base[0], f->reg_size[0]);
+	transmit_init(e1000);
 }
