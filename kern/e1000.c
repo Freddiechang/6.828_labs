@@ -1,6 +1,7 @@
 #include <inc/string.h>
 #include <kern/e1000.h>
 #include <kern/pmap.h>
+#include <inc/error.h>
 
 // LAB 6: Your driver code here
 static struct eth_pack_buffer * list_tx_buffer[NTXDESC];
@@ -51,7 +52,7 @@ void transmit_init(volatile char * dev_mmiobase)
             }
             addr += PGSIZE;
         }
-        list_tx_buffer[i] = (struct eth_pack_buffer *)(addr + (i % 2) * sizeof(struct eth_pack_buffer));
+        list_tx_buffer[i] = (struct eth_pack_buffer *)(addr + i % 2 == 0 ? 0 : sizeof(struct eth_pack_buffer));
     }
 }
 
@@ -66,7 +67,7 @@ int transmit_pack(volatile char * dev_mmiobase, const void * buf, size_t size)
     if(list_tx_desc[pack_count].addr != (uint32_t)NULL && 
         (list_tx_desc[pack_count].status & E1000_TXD_STAT_DD) == 0)
     {
-        return -1;
+        return -E_TX_BUSY;
     }
     list_tx_desc[pack_count].status &= ~E1000_TXD_STAT_DD;
     memmove((void *)list_tx_buffer[pack_count]->buffer, buf, size);

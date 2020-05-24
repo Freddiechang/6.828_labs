@@ -12,6 +12,7 @@
 #include <kern/console.h>
 #include <kern/sched.h>
 #include <kern/time.h>
+#include <kern/e1000.h>
 
 // Print a string to the system console.
 // The string is exactly 'len' characters long.
@@ -433,6 +434,19 @@ sys_time_msec(void)
 	return time_msec();
 }
 
+// transmit packet syscall
+static int sys_net_try_send(void * buf, size_t length)
+{
+	if(length > MAX_PACK_SIZE)
+	{
+		return -E_INVAL;
+	}
+	user_mem_assert(curenv, buf, length, PTE_P | PTE_U);
+	struct eth_pack_buffer tmp_buf;
+	memmove((void *)tmp_buf.buffer, buf, length);
+	return transmit_pack(e1000, tmp_buf.buffer, length);
+}
+
 // Dispatches to the correct kernel function, passing the arguments.
 int32_t
 syscall(uint32_t syscallno, uint32_t a1, uint32_t a2, uint32_t a3, uint32_t a4, uint32_t a5)
@@ -506,6 +520,10 @@ syscall(uint32_t syscallno, uint32_t a1, uint32_t a2, uint32_t a3, uint32_t a4, 
 		case SYS_time_msec:
 		{
 			return sys_time_msec();
+		}
+		case SYS_net_try_send:
+		{
+			return sys_net_try_send((void *)a1, a2);
 		}
 	    default:
 		    return -E_INVAL;

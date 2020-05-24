@@ -3,6 +3,8 @@
 #endif  // SOL >= 6
 #include <kern/pmap.h>
 
+extern volatile char *e1000;
+
 #define NETVA 0xc0000000
 #define MAX_PACK_SIZE 1518
 #define E1000_DEV_ID_82540EM  0x100E
@@ -57,7 +59,6 @@ struct tx_desc
 struct eth_pack_buffer
 {
 	char buffer[MAX_PACK_SIZE];
-	// pad to half a page size
 	char _pad[PGSIZE/2 - MAX_PACK_SIZE];
 };
 

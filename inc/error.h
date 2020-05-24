@@ -26,6 +26,8 @@ enum {
 	E_NOT_EXEC	,	// File not a valid executable
 	E_NOT_SUPP	,	// Operation not supported
 
+    // Network stack error codes
+	E_TX_BUSY    ,  // TX failed, device is busy
 	MAXERROR
 };
 
