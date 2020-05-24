@@ -267,4 +267,14 @@ pci_e1000_attach(struct pci_func *f)
 	pci_func_enable(f);
 	e1000 = mmio_map_region(f->reg_base[0], f->reg_size[0]);
 	transmit_init(e1000);
+	uint32_t a = 0x80907060;
+	transmit_pack(e1000, (void*)&a, sizeof(a));
+	transmit_pack(e1000, (void*)&a, sizeof(a));
+	a = 0x0ffffffff;
+	transmit_pack(e1000, (void*)&a, sizeof(a));
+	transmit_pack(e1000, (void*)&a, sizeof(a));
+	a = 0x20103040;
+	transmit_pack(e1000, (void*)&a, sizeof(a));
+	transmit_pack(e1000, (void*)&a, sizeof(a));
+	transmit_pack(e1000, (void*)&a, sizeof(a));
 }

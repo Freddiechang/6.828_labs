@@ -4,6 +4,7 @@
 #include <kern/pmap.h>
 
 #define NETVA 0xc0000000
+#define MAX_PACK_SIZE 1518
 #define E1000_DEV_ID_82540EM  0x100E
 
 /* Register Set. (82543, 82544)
@@ -33,6 +34,14 @@
 
 #define E1000_TIPG     0x00410  /* TX Inter-packet gap -RW */
 
+/* Transmit Descriptor bit definitions */
+#define E1000_TXD_CMD_EOP    0x1 /* End of Packet */
+#define E1000_TXD_CMD_RS     0x8        /* Report Status */
+#define E1000_TXD_STAT_DD    0x00000001 /* Descriptor Done */
+#define E1000_TXD_STAT_EC    0x00000002 /* Excess Collisions */
+#define E1000_TXD_STAT_LC    0x00000004 /* Late Collisions */
+
+
 #define NTXDESC 16
 struct tx_desc
 {
@@ -47,7 +56,10 @@ struct tx_desc
 
 struct eth_pack_buffer
 {
-	char buffer[1518];
+	char buffer[MAX_PACK_SIZE];
+	// pad to half a page size
+	char _pad[PGSIZE/2 - MAX_PACK_SIZE];
 };
 
 void transmit_init(volatile char * dev_mmiobase);
+int transmit_pack(volatile char * dev_mmiobase, const void * buf, size_t size);
