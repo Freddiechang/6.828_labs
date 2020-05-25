@@ -439,7 +439,7 @@ static int sys_net_try_send(void * buf, size_t length)
 {
 	struct PageInfo *pp;
 	int r;
-	if(length > MAX_PACK_SIZE)
+	if(length > MAX_TXPACK_SIZE)
 	{
 		return -E_INVAL;
 	}

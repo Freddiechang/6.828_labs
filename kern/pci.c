@@ -267,5 +267,6 @@ pci_e1000_attach(struct pci_func *f)
 	pci_func_enable(f);
 	e1000 = mmio_map_region(f->reg_base[0], f->reg_size[0]);
 	transmit_init(e1000);
+	receive_init(e1000);
 	
 }

@@ -4,14 +4,14 @@
 #include <inc/error.h>
 
 // LAB 6: Your driver code here
-static struct eth_pack_buffer list_tx_buffer[NTXDESC];
+static struct tx_pack_buffer list_tx_buffer[NTXDESC];
 static struct tx_desc list_tx_desc[NTXDESC];
+static struct rx_pack_buffer list_rx_buffer[NRXDESC];
+static struct rx_desc list_rx_desc[NRXDESC];
 
 void transmit_init(volatile char * dev_mmiobase)
 {
     uint32_t i;
-    int r;
-    pte_t * pte;
 
      // dev init regs
     ((uint32_t *)dev_mmiobase)[E1000_TDBAL / 4] = PADDR(list_tx_desc);
@@ -35,8 +35,7 @@ int transmit_pack(volatile char * dev_mmiobase, const void * buf, size_t size)
 
     // look for available desc
     static uint16_t pack_count = 0;
-    if(list_tx_desc[pack_count].addr != (uint32_t)NULL && 
-        (list_tx_desc[pack_count].status & E1000_TXD_STAT_DD) == 0)
+    if( (list_tx_desc[pack_count].status & E1000_TXD_STAT_DD) == 0)
     {
         return -E_TX_BUSY;
     }
@@ -47,4 +46,34 @@ int transmit_pack(volatile char * dev_mmiobase, const void * buf, size_t size)
     pack_count = (pack_count + 1) % NTXDESC;
     ((uint32_t *)dev_mmiobase)[E1000_TDT / 4] = pack_count;
     return 0;
+}
+
+
+void receive_init(volatile char * dev_mmiobase)
+{
+    uint32_t i;
+
+     // dev init regs
+    ((uint32_t *)dev_mmiobase)[E1000_RAL / 4] = 0x12005452;
+    ((uint32_t *)dev_mmiobase)[E1000_RAH / 4] = 0x80005634;
+    for(i = 0; i < 512 / sizeof(uint32_t); i++)
+    {
+        ((uint32_t *)dev_mmiobase)[E1000_MTA / 4 + i] = 0x0;
+    }
+    ((uint32_t *)dev_mmiobase)[E1000_IMS / 4] = 0x0;
+    ((uint32_t *)dev_mmiobase)[E1000_RDBAL / 4] = PADDR(list_rx_desc);
+    ((uint32_t *)dev_mmiobase)[E1000_RDBAH / 4] = 0x0;
+    ((uint32_t *)dev_mmiobase)[E1000_RDLEN / 4] = sizeof(struct rx_desc) * NRXDESC;
+    for(i = 0; i < NRXDESC; i++)
+    {
+        list_rx_desc[i].addr = PADDR(list_rx_buffer[i].buffer);
+        list_rx_desc[i].status = 0x0;
+    }
+    ((uint32_t *)dev_mmiobase)[E1000_RDH / 4] = 0x0;
+    ((uint32_t *)dev_mmiobase)[E1000_RDT / 4] = NRXDESC - 1;
+    ((uint32_t *)dev_mmiobase)[E1000_RCTL / 4] = E1000_RCTL_EN | E1000_RCTL_RDMTS_EIGTH
+        | E1000_RCTL_SECRC;
+
+    
+    
 }
