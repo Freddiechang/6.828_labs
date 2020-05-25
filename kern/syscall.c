@@ -437,14 +437,14 @@ sys_time_msec(void)
 // transmit packet syscall
 static int sys_net_try_send(void * buf, size_t length)
 {
+	struct PageInfo *pp;
+	int r;
 	if(length > MAX_PACK_SIZE)
 	{
 		return -E_INVAL;
 	}
 	user_mem_assert(curenv, buf, length, PTE_P | PTE_U);
-	struct eth_pack_buffer tmp_buf;
-	memmove((void *)tmp_buf.buffer, buf, length);
-	return transmit_pack(e1000, tmp_buf.buffer, length);
+	return transmit_pack(e1000, buf, length);
 }
 
 // Dispatches to the correct kernel function, passing the arguments.
