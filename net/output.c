@@ -24,7 +24,7 @@ output(envid_t ns_envid)
 			panic("wrong message from ns");
 		}
 		pkt = &nsipcbuf.pkt;
-		while( (r = sys_net_try_send((void *)pkt->jp_data, pkt->jp_len)) == E_TX_BUSY)
+		while( (r = sys_net_try_send((void *)pkt->jp_data, pkt->jp_len)) == -E_TX_BUSY)
 		{
 			sys_yield();
 		}
