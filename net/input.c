@@ -25,6 +25,9 @@ input(envid_t ns_envid)
 			}
 	}
 	pkt = &nsipcbuf.pkt;
+	// the corresponding page frame is an COW page after fork, we must allocate 
+    // our own address space before entering kernel mode (sys_nic_recv)
+	//memmove(&nsipcbuf, "0000", 1);
 	while(1)
 	{
 		while( (r = sys_net_recv((void *)pkt->jp_data)) == E_RX_BUSY)

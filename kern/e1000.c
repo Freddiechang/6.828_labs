@@ -60,7 +60,7 @@ void receive_init(volatile char * dev_mmiobase)
     {
         ((uint32_t *)dev_mmiobase)[E1000_MTA / 4 + i] = 0x0;
     }
-    ((uint32_t *)dev_mmiobase)[E1000_IMS / 4] = E1000_IMS_TXDW;
+    ((uint32_t *)dev_mmiobase)[E1000_IMS / 4] = 0x0;
     ((uint32_t *)dev_mmiobase)[E1000_RDBAL / 4] = PADDR(list_rx_desc);
     ((uint32_t *)dev_mmiobase)[E1000_RDBAH / 4] = 0x0;
     ((uint32_t *)dev_mmiobase)[E1000_RDLEN / 4] = sizeof(struct rx_desc) * NRXDESC;

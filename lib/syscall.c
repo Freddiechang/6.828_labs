@@ -130,5 +130,5 @@ int sys_net_try_send(const void * buf, size_t length)
 
 int sys_net_recv(void * buf)
 {
-	return syscall(SYS_net_recv, 1, (uint32_t)buf, 0, 0, 0, 0);
+	return syscall(SYS_net_recv, 0, (uint32_t)buf, 0, 0, 0, 0);
 }
