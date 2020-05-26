@@ -34,7 +34,7 @@ int transmit_pack(volatile char * dev_mmiobase, const void * buf, size_t size)
     // check size < max_pack_size, maybe in syscall interface
 
     // look for available desc
-    uint16_t pack_count = ((uint32_t *)dev_mmiobase)[E1000_TDT / 4];
+    uint32_t pack_count = ((uint32_t *)dev_mmiobase)[E1000_TDT / 4];
     if( (list_tx_desc[pack_count].status & E1000_TXD_STAT_DD) == 0)
     {
         return -E_TX_BUSY;
@@ -77,7 +77,7 @@ void receive_init(volatile char * dev_mmiobase)
 
 int receive_pack(volatile char * dev_mmiobase, void * buf)
 {
-    uint16_t pack_count = ((uint32_t *)dev_mmiobase)[E1000_RDT / 4];
+    uint32_t pack_count = ((uint32_t *)dev_mmiobase)[E1000_RDT / 4];
     pack_count = (pack_count + 1) % NRXDESC;
     if( (list_rx_desc[pack_count].status & E1000_RXD_STAT_DD) == 0)
     {

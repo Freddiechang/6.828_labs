@@ -45,7 +45,6 @@ input(envid_t ns_envid)
             panic("%s: sys_net_recv: %e", binaryname, r);
 		pkt->jp_len = r;
 		memmove((void *)INPUT_HELPER_VA + i * PGSIZE, pkt, sizeof(union Nsipc));
-		cprintf("input111: %x, length: %d\n", *(uint32_t*)pkt->jp_data, pkt->jp_len);
 		ipc_send(ns_envid, NSREQ_INPUT, (void *)INPUT_HELPER_VA + i * PGSIZE, PTE_P | PTE_U);
 		i = (i + 1) % NRECVPAGE;
 	}
