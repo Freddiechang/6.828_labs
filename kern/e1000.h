@@ -51,7 +51,12 @@ extern volatile char *e1000;
 #define E1000_TXD_STAT_EC    0x00000002 /* Excess Collisions */
 #define E1000_TXD_STAT_LC    0x00000004 /* Late Collisions */
 
+/* Receive Descriptor bit definitions */
+#define E1000_RXD_STAT_DD       0x01    /* Descriptor Done */
+#define E1000_RXD_STAT_EOP      0x02    /* End of Packet */
+
 #define E1000_IMS      0x000D0  /* Interrupt Mask Set - RW */
+#define E1000_ICR      0x000C0  /* Interrupt Cause Read - R/clr */
 
 #define E1000_RCTL             0x00100  /* RX Control - RW */
 #define E1000_RCTL_EN          0x00000002    /* enable */
@@ -65,6 +70,9 @@ extern volatile char *e1000;
 #define E1000_RCTL_SZ_2048     0x00000000    /* rx buffer size 2048 */
 #define E1000_RCTL_BSEX        0x02000000    /* Buffer size extension */
 #define E1000_RCTL_SECRC       0x04000000    /* Strip Ethernet CRC */
+
+#define E1000_ICR_TXDW          0x00000001 /* Transmit desc written back */
+#define E1000_IMS_TXDW      E1000_ICR_TXDW      /* Transmit desc written back */
 
 #define NTXDESC 16
 #define NRXDESC 128
@@ -102,3 +110,4 @@ struct rx_pack_buffer
 void transmit_init(volatile char * dev_mmiobase);
 int transmit_pack(volatile char * dev_mmiobase, const void * buf, size_t size);
 void receive_init(volatile char * dev_mmiobase);
+int receive_pack(volatile char * dev_mmiobase, void * buf);

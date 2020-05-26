@@ -123,7 +123,12 @@ sys_time_msec(void)
 	return (unsigned int) syscall(SYS_time_msec, 0, 0, 0, 0, 0, 0);
 }
 
-int sys_net_try_send(void * buf, size_t length)
+int sys_net_try_send(const void * buf, size_t length)
 {
 	return syscall(SYS_net_try_send, 1, (uint32_t)buf, length, 0 ,0, 0);
+}
+
+int sys_net_recv(void * buf)
+{
+	return syscall(SYS_net_recv, 1, (uint32_t)buf, 0, 0, 0, 0);
 }

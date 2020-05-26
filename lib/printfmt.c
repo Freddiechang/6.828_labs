@@ -36,6 +36,7 @@ static const char * const error_string[MAXERROR] =
 	[E_NOT_EXEC]	= "file is not a valid executable",
 	[E_NOT_SUPP]	= "operation not supported",
 	[E_TX_BUSY]     = "tx queue full, please try again later",
+	[E_RX_BUSY]     = "rx queue empty, please try again later",
 };
 
 /*

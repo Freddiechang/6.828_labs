@@ -435,9 +435,8 @@ sys_time_msec(void)
 }
 
 // transmit packet syscall
-static int sys_net_try_send(void * buf, size_t length)
+static int sys_net_try_send(const void * buf, size_t length)
 {
-	struct PageInfo *pp;
 	int r;
 	if(length > MAX_TXPACK_SIZE)
 	{
@@ -447,6 +446,13 @@ static int sys_net_try_send(void * buf, size_t length)
 	return transmit_pack(e1000, buf, length);
 }
 
+
+// receive packet syscall
+static int sys_net_recv(void * buf)
+{
+	user_mem_assert(curenv, buf, MAX_RXPACK_SIZE, PTE_P | PTE_U | PTE_W);
+	return receive_pack(e1000, buf);
+}
 // Dispatches to the correct kernel function, passing the arguments.
 int32_t
 syscall(uint32_t syscallno, uint32_t a1, uint32_t a2, uint32_t a3, uint32_t a4, uint32_t a5)
@@ -524,6 +530,10 @@ syscall(uint32_t syscallno, uint32_t a1, uint32_t a2, uint32_t a3, uint32_t a4, 
 		case SYS_net_try_send:
 		{
 			return sys_net_try_send((void *)a1, a2);
+		}
+		case SYS_net_recv:
+		{
+			return sys_net_recv((void *)a1);
 		}
 	    default:
 		    return -E_INVAL;

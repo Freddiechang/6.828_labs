@@ -7,6 +7,8 @@
 
 #define TIMER_INTERVAL 250
 
+#define NRECVPAGE 24
+#define INPUT_HELPER_VA  0xc0000000
 // Virtual address at which to receive page mappings containing client requests.
 #define QUEUE_SIZE	20
 #define REQVA		(0x0ffff000 - QUEUE_SIZE * PGSIZE)

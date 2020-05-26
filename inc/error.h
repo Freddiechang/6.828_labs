@@ -28,6 +28,7 @@ enum {
 
     // Network stack error codes
 	E_TX_BUSY    ,  // TX failed, device is busy
+	E_RX_BUSY    ,  // RX failed, device is busy
 	MAXERROR
 };
 

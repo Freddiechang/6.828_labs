@@ -60,7 +60,7 @@ void receive_init(volatile char * dev_mmiobase)
     {
         ((uint32_t *)dev_mmiobase)[E1000_MTA / 4 + i] = 0x0;
     }
-    ((uint32_t *)dev_mmiobase)[E1000_IMS / 4] = 0x0;
+    ((uint32_t *)dev_mmiobase)[E1000_IMS / 4] = E1000_IMS_TXDW;
     ((uint32_t *)dev_mmiobase)[E1000_RDBAL / 4] = PADDR(list_rx_desc);
     ((uint32_t *)dev_mmiobase)[E1000_RDBAH / 4] = 0x0;
     ((uint32_t *)dev_mmiobase)[E1000_RDLEN / 4] = sizeof(struct rx_desc) * NRXDESC;
@@ -73,7 +73,18 @@ void receive_init(volatile char * dev_mmiobase)
     ((uint32_t *)dev_mmiobase)[E1000_RDT / 4] = NRXDESC - 1;
     ((uint32_t *)dev_mmiobase)[E1000_RCTL / 4] = E1000_RCTL_EN | E1000_RCTL_RDMTS_EIGTH
         | E1000_RCTL_SECRC;
+}
 
-    
-    
+int receive_pack(volatile char * dev_mmiobase, void * buf)
+{
+    static uint16_t pack_count = NRXDESC - 1;
+    pack_count = (pack_count + 1) % NRXDESC;
+    if( (list_rx_desc[pack_count].status & E1000_RXD_STAT_DD) == 0)
+    {
+        return -E_RX_BUSY;
+    }
+    memmove(buf, (void *)list_rx_buffer[pack_count].buffer, list_rx_desc[pack_count].length);
+    list_tx_desc[pack_count].status &= ~(E1000_TXD_STAT_DD | E1000_RXD_STAT_EOP);
+    ((uint32_t *)dev_mmiobase)[E1000_RDT / 4] = pack_count;
+    return list_rx_desc[pack_count].length;
 }
